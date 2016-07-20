@@ -1,3 +1,5 @@
+
+
 package lambdas.lesson2.exercise;
 
 import lambdas.lesson1.Person;
@@ -5,6 +7,7 @@ import lambdas.lesson2.example.Employee;
 import lambdas.lesson2.example.JobHistoryEntry;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +30,11 @@ public class Mapping {
 
         public <R> MapHelper<R> map(Function<T, R> f) {
             // TODO
-            throw new UnsupportedOperationException();
+            final List<R> result = new ArrayList<R>();
+            for (T t : list) {
+                result.add(f.apply(t));
+            }
+            return new MapHelper<R>(result);
         }
 
         // TODO *
@@ -60,12 +67,13 @@ public class Mapping {
 
         final List<Employee> mappedEmployees =
                 new MapHelper<>(employees)
-                /*
-                .map(TODO) // change name to John .map(e -> e.withPerson(e.getPerson().withFirstName("John")))
-                .map(TODO) // add 1 year to experience duration .map(e -> e.withJobHistory(addOneYear(e.getJobHistory())))
-                .map(TODO) // replace qa with QA
-                * */
-                .getList();
+
+                        //TODO for test mapping()
+                        .map(e -> e.withPerson(e.getPerson().withFirstName("John"))) // change name to John
+                        .map(e -> e.withJobHistory(addOneYear(e.getJobHistory()))) // add 1 year to experience duration
+                        .map(e -> e.withJobHistory(replaceQA(e.getJobHistory()))) // replace qa with QA
+
+                        .getList();
 
         final List<Employee> expectedResult =
                 Arrays.asList(
@@ -91,47 +99,76 @@ public class Mapping {
 
         assertEquals(mappedEmployees, expectedResult);
     }
+    //TODO for test mapping()
+    private List<JobHistoryEntry> replaceQA(List<JobHistoryEntry> jobHistory) {
+        return new MapHelper<>(jobHistory)
+                .map(jhe -> {
 
+                    if (jhe.getPosition().equals("qa")) {
+                        return jhe.withPosition("QA");
+                    } else {
+                        return jhe.withPosition(jhe.getPosition());
+                    }
 
+                })
+                .getList();
+    }
+    //TODO for test mapping()
+    private List<JobHistoryEntry> addOneYear(List<JobHistoryEntry> jobHistory) {
+        return new MapHelper<>(jobHistory)
+                .map(jhe -> jhe.withDuration(jhe.getDuration()+1))
+                .getList();
+    }
+
+    //TODO for test lazy_mapping()
     private static class LazyMapHelperNext<T, R> {
-        private Function<T, R> funtion;
+        private final List<T> list;
+        private final Function<T, R> function;
 
-        public LazyMapHelperNext(List<T> list) {
-            // TODO
-            throw new UnsupportedOperationException();
+        public LazyMapHelperNext(List<T> list, Function<T, R> function) {
+            this.list = list;
+            this.function = function;
         }
 
         public List<R> force() {
-            // TODO
-            throw new UnsupportedOperationException();
+            final List<R> result = new ArrayList<R>();
+            for (T t : list) {
+                result.add(function.apply(t));
+            }
+            return result;
         }
 
+        // T -> R, R -> R2
+        // T -> R2
+
         public <R2> LazyMapHelperNext<T, R2> map(Function<R, R2> f) {
-            // TODO
-            throw new UnsupportedOperationException();
+            Function<T, R2> function = (T t) -> {
+                R apply = this.function.apply(t);
+                final R2 apply1 = f.apply(apply);
+                return apply1;
+
+            };
+            return new LazyMapHelperNext(list, function);
         }
 
         // TODO *
         // public <R> LazyMapHelper<R> flatMap(Function<T, List<R>> f)
     }
-
+    //TODO for test lazy_mapping()
     private static class LazyMapHelper<T> {
-        // Можно потерять типизацию или использовать LazyMapHelperNext:
-        // private Function<?, T> function = null;
+
+        private final List<T> list;
+
         public LazyMapHelper(List<T> list) {
-            // TODO
-            throw new UnsupportedOperationException();
+            this.list = list;
         }
 
         public List<T> force() {
-            // TODO
-            throw new UnsupportedOperationException();
+            return list;
         }
 
-        //public <R> LazyMapHelperNext<T, R> map(Function<T, R> f) {
-        public <R> LazyMapHelper<R> map(Function<T, R> f) {
-            // TODO
-            throw new UnsupportedOperationException();
+        public <R> LazyMapHelperNext<T, R> map(Function<T, R> f) {
+            return new LazyMapHelperNext<T, R>(list, f);
         }
 
         // TODO *
@@ -164,12 +201,11 @@ public class Mapping {
 
         final List<Employee> mappedEmployees =
                 new LazyMapHelper<>(employees)
-                /*
-                .map(TODO) // change name to John
-                .map(TODO) // add 1 year to experience duration
-                .map(TODO) // replace qa with QA
-                * */
-                .force();
+                        //TODO for test lazy_mapping()
+                        .map(e -> e.withPerson(e.getPerson().withFirstName("John")))// change name to John
+                        .map(e -> e.withJobHistory(addOneYear(e.getJobHistory()))) // add 1 year to experience duration
+                        .map(e -> e.withJobHistory(replaceQA(e.getJobHistory()))) // replace qa with QA
+                        .force();
 
         final List<Employee> expectedResult =
                 Arrays.asList(
