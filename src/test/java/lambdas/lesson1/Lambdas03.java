@@ -10,19 +10,22 @@ public class Lambdas03 {
         T sum(T a, T b);
 
         default T twice(T t) {
-            return sum(t,t);
+            return sum(t, t);
         }
     }
 
     @Test
     public void generic1() {
-        final GenericSum<Integer> sum =
+        final GenericSum<Integer> integerGenericSum =
+                //anonymous inner class net lambda
                 (Integer i1, Integer i2) -> {
-                    System.out.print("before sum");
+                    System.out.println("before sum: " + i1 + " " + i2);
                     return i1 + i2;
                 };
 
-        assertEquals(sum.sum(1, 2), Integer.valueOf(3));
+        assertEquals(integerGenericSum.sum(1, 2), Integer.valueOf(3));
+
+        assertEquals(integerGenericSum.twice(10), Integer.valueOf(20));
     }
 
     @Test
@@ -38,9 +41,11 @@ public class Lambdas03 {
 
     @Test
     public void strSum() {
-        final GenericSum<String> sum = Lambdas03::stringSum;
+        final GenericSum<String> stringGenericSum = Lambdas03::stringSum; //this will be used as override method
 
-        assertEquals(sum.sum("a", "b"), "ab");
+        assertEquals(stringGenericSum.sum("a", "b"), "ab");
+
+        assertEquals(stringGenericSum.twice("c"), "cc");
     }
 
     private final String delimeter = "-";
